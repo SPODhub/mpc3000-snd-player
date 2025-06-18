@@ -1,48 +1,110 @@
-import Link from "next/link";
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import SndPlayer from '@/components/SndPlayer'
+import { convertToSnd } from '@/lib/audioConverter'
 
 export default function Home() {
+  const [loadedSndFile, setLoadedSndFile] = useState<{ file: Blob, name: string } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isConverting, setIsConverting] = useState(false)
+  const playerInputRef = useRef<HTMLInputElement>(null)
+
+  // Prevent default drag-and-drop behavior globally
+  useEffect(() => {
+    const preventDefault = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    window.addEventListener('dragover', preventDefault);
+    window.addEventListener('drop', preventDefault);
+    return () => {
+      window.removeEventListener('dragover', preventDefault);
+      window.removeEventListener('drop', preventDefault);
+    };
+  }, []);
+
+  const handleFile = async (file: File) => {
+    setError(null)
+    setIsConverting(false)
+
+    try {
+      if (file.name.toLowerCase().endsWith('.snd')) {
+        setLoadedSndFile({ file, name: file.name })
+      } else if (file.name.toLowerCase().endsWith('.wav')) {
+        setIsConverting(true)
+        const sndBlob = await convertToSnd(file)
+        setLoadedSndFile({ 
+          file: sndBlob, 
+          name: file.name.replace(/\.wav$/i, '.snd') 
+        })
+      } else {
+        setError('Please select a WAV or SND file.')
+      }
+    } catch (err) {
+      console.error('Error processing file:', err)
+      setError(err instanceof Error ? err.message : 'Error processing file')
+    } finally {
+      setIsConverting(false)
+    }
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8">
-      <div>
-        <h2 className="text-2xl font-semibold text-center border p-4 font-mono rounded-md">
-          Get started by choosing a template path from the /paths/ folder.
-        </h2>
-      </div>
-      <div>
-        <h1 className="text-6xl font-bold text-center">Make anything you imagine 🪄</h1>
-        <h2 className="text-2xl text-center font-light text-gray-500 pt-4">
-          This whole page will be replaced when you run your template path.
-        </h2>
-      </div>
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">AI Chat App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            An intelligent conversational app powered by AI models, featuring real-time responses
-            and seamless integration with Next.js and various AI providers.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">AI Image Generation App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            Create images from text prompts using AI, powered by the Replicate API and Next.js.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">Social Media App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            A feature-rich social platform with user profiles, posts, and interactions using
-            Firebase and Next.js.
-          </p>
-        </div>
-        <div className="border rounded-lg p-6 hover:bg-gray-100 transition-colors">
-          <h3 className="text-xl font-semibold">Voice Notes App</h3>
-          <p className="mt-2 text-sm text-gray-600">
-            A voice-based note-taking app with real-time transcription using Deepgram API, 
-            Firebase integration for storage, and a clean, simple interface built with Next.js.
-          </p>
+    <main className="min-h-screen p-8">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">MPC3000 SND Player</h1>
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-semibold mb-4">SND Player</h2>
+          <div
+            className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const file = e.dataTransfer.files[0];
+              if (file) handleFile(file);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              playerInputRef.current?.click();
+            }}
+          >
+            <input
+              type="file"
+              ref={playerInputRef}
+              onChange={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+              }}
+              accept=".snd,.wav"
+              className="hidden"
+            />
+            <p className="text-gray-600">
+              {isConverting ? (
+                'Converting WAV to SND...'
+              ) : (
+                'Drop a WAV or SND file here or click to select'
+              )}
+            </p>
+          </div>
+          {error && (
+            <p className="mt-4 text-red-600">{error}</p>
+          )}
+          {loadedSndFile && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">Currently Playing:</h3>
+              <p className="text-sm text-gray-600 mb-4">{loadedSndFile.name}</p>
+              <SndPlayer sndFile={loadedSndFile.file} />
+            </div>
+          )}
         </div>
       </div>
     </main>
-  );
+  )
 }
