@@ -6,12 +6,15 @@ A modern web application for playing and converting Akai S3000/MPC3000 SND files
 
 - 🎵 SND file playback with pitch control
 
-  **ROADMAP**
+    I've built this as the base block to hopefully create a WAV to SND converter that will evolve into a sample chopper / pad & bank assigner directly from WAV files in your own libraries and creating a simple PGM file and saving them in an organised format to put onto SD cards for your MPC3000.
+
+  **ROUGH ROADMAP**
 - 🔄 WAV to SND conversion (coming soon)
 - 🎚️ Sample rate conversion
-- 🔁 Loop point support
 - 📊 Waveform visualization
+- 🔁 WAV chopping & Assigning chops to pads
 - 🎛️ Sample editing capabilities
+- Librarian
 
 ## Getting Started
 
