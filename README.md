@@ -5,6 +5,8 @@ A modern web application for playing and converting Akai S3000/MPC3000 SND files
 ## Features
 
 - 🎵 SND file playback with pitch control
+
+  **ROADMAP**
 - 🔄 WAV to SND conversion (coming soon)
 - 🎚️ Sample rate conversion
 - 🔁 Loop point support
